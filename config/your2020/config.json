@@ -1,0 +1,7 @@
+{
+    "cookieDomain": ".mydomain.com",
+    "ombiPublicHostname": "https://ombi.mydomain.com",
+    "tautulliPublicHostname": "https://plexpy.mydomain.com",
+    "tautulliApiKey": "apiKey",
+    "plexPublicHostname": "http://plex:32400"
+}

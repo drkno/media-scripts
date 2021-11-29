@@ -1,0 +1,212 @@
+*.old
+*.*~
+*.bak
+*.db-shm
+*.db-wal
+*.pid
+*.log
+*.db
+*.mp4
+.env
+
+Anime
+Movies
+TV\ Shows
+
+# downloads
+downloads/*
+
+# bazarr
+config/bazarr/log
+config/bazarr/db/
+
+# deluge
+config/deluge/archive
+config/deluge/*.log
+config/deluge/*.conf~
+config/deluge/state
+config/deluge/label.conf
+config/deluge/web.conf
+config/deluge/session.state
+config/deluge/session.state.tmp
+
+# grafana
+config/grafana/grafana/
+config/grafana/influxdb/data/
+config/grafana/influxdb/wal/
+config/grafana/varken/GeoLite2-City.mmdb
+config/grafana/varken/logs/
+config/grafana/varken/varken.example.ini
+
+# grocy
+config/grocery/data/viewcache
+config/grocery/nginx
+config/grocery/php
+config/grocery/www
+config/grocery/log
+config/grocery/keys
+
+# jackett
+config/jackett/Jackett/log.txt*
+config/jackett/Jackett/Indexers
+
+# jellyfin
+config/jellyfin/config/cache
+config/jellyfin/config/data/transcoding-temp
+config/jellyfin/config/log
+config/jellyfin/transcode
+config/jellyfin/config/data/metadata
+config/jellyfin/config/data/data
+config/jellyfin/config/dlna
+config/jellyfin/config/users
+
+# mount
+config/mount/chunks
+config/mount/cloud-decrypt
+config/mount/cloud-encrypt
+config/mount/db
+config/mount/external
+config/mount/local-decrypt
+config/mount/mount
+config/mount/local-media
+config/mount/logs
+config/mount/intermediate_mounts
+config/mount/config.json
+config/mount/token.json
+config/mount/rclone.conf
+config/mount/config/plexdrive/cache.bolt
+
+# letsencrypt
+config/letsencrypt/log
+config/letsencrypt/etc/letsencrypt
+config/letsencrypt/keys
+config/letsencrypt/nginx_*
+config/letsencrypt/fail2ban
+config/letsencrypt/nginx/proxy-confs
+config/letsencrypt/nginx/ldap.conf
+config/letsencrypt/nginx/dhparams.pem
+config/letsencrypt/donoteditthisfile.conf
+config/letsencrypt/geoip2db
+config/letsencrypt/dns-conf
+config/letsencrypt/nginx/ssl.conf
+config/letsencrypt/nginx/authelia-location.conf
+config/letsencrypt/nginx/authelia-server.conf
+config/letsencrypt/.donoteditthisfile.conf
+config/letsencrypt/www/502.html
+
+# nzbhydra2
+config/nzbhydra2/backup
+config/nzbhydra2/logs
+config/nzbhydra2/update
+config/nzbhydra2/database
+
+# ombi
+config/ombi/Logs
+config/ombi/Ombi.db
+config/ombi/OmbiExternal.db
+config/ombi/\.*
+
+# overseerr
+config/overseerr/db/
+config/overseerr/logs/
+
+# plex
+config/plex/mount
+config/plex/transcode
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Cache
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Codecs
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Crash\ Reports
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Diagnostics
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Logs
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/plexmediaserver.pid
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Plug-ins
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Plug-in\ Support
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Media
+config/plex/library/Library/Application\ Support/Plex\ Media\ Server/Metadata
+
+# portainer
+config/portainer/portainer.db
+config/portainer/certs
+config/portainer/docker_config
+
+# prowlarr
+config/prowlarr/Backups
+config/prowlarr/logs
+config/prowlarr/logs.db
+config/prowlarr/*.db-shm
+config/prowlarr/*.db-wal
+config/prowlarr/*.pid
+config/prowlarr/UpdateLogs
+config/prowlarr/t
+config/prowlarr/xdg
+config/prowlarr/MediaCover
+config/prowlarr/Definitions
+
+# radarr
+config/radarr/Backups
+config/radarr/logs
+config/radarr/logs.db
+config/radarr/*.db-shm
+config/radarr/*.db-wal
+config/radarr/*.pid
+config/radarr/UpdateLogs
+config/radarr/t
+config/radarr/xdg
+config/radarr/MediaCover
+
+# readarr
+config/readarr/Backups
+config/readarr/logs
+config/readarr/logs.db
+config/readarr/*.db-shm
+config/readarr/*.db-wal
+config/readarr/*.pid
+config/readarr/*.db
+config/readarr/UpdateLogs
+config/readarr/t
+config/readarr/xdg
+config/readarr/MediaCover
+
+# sabnzbd
+config/sabnzbd/logs
+config/sabnzbd/Downloads
+config/sabnzbd
+
+# sonarr
+config/sonarr/Backups
+config/sonarr/logs
+config/sonarr/logs.db
+config/sonarr/*.db-shm
+config/sonarr/*.db-wal
+config/sonarr/*.pid
+config/sonarr/UpdateLogs
+config/sonarr/t
+config/sonarr/xdg
+config/sonarr/MediaCover
+
+# tautulli
+config/tautulli/backups
+config/tautulli/cache
+config/tautulli/logs
+config/tautulli/newsletters
+config/tautulli/*.lock
+config/tautulli/tautulli.db
+config/tautulli/GeoLite2-City.mmdb
+
+# tdarr
+config/tdarr/Backups
+config/tdarr/Samples
+config/tdarr/Plugins
+
+# unmanic
+config/unmanic/.unmanic
+!config/unmanic/.unmanic/config/settings.json
+
+# vpn
+config/vpn/.firewall6
+
+# xteve
+config/xteve/tmp
+config/xteve/home/backup
+config/xteve/home/cache
+

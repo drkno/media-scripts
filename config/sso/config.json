@@ -1,0 +1,24 @@
+﻿{
+  "configFile": "/config/",
+  "pluginDirectory": "/app",
+  "serverIdentifier": "plexServerId",
+  "plexPreferencesFile": null,
+  "cookieDomain": ".somedomain.com",
+  "defaultAccessDeniedMessage": "Access Denied",
+  "accessControls": {
+  },
+  "plugins": {
+    "ombi": {
+      "publicHostname": "https://ombi.mydomain.com"
+    },
+    "tautulli": {
+      "publicHostname": "https://plexpy.mydomain.com"
+    },
+    "overseerr": {
+      "publicHostname": "https://overseerr.mydomain.com"
+    },
+    "deluge": {
+      "publicHostname": "https://deluge.mydomain.com"
+    }
+  }
+}

@@ -1,0 +1,435 @@
+version: '3.4'
+services:
+    # === Management ===
+    portainer:
+        container_name: portainer
+        image: portainer/portainer-ce:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - ./config/portainer:/data
+        ports:
+            - 9000:9000/tcp
+        command: -H unix:///var/run/docker.sock
+
+    # === Search meta-indexers ===
+    prowlarr:
+        container_name: prowlarr
+        image: ghcr.io/linuxserver/prowlarr:develop
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/prowlarr:/config
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:9696/api/v3/health?apikey=${PROWLARR_API_KEY}" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    # === Torrent downloader ===
+    vpn:
+        container_name: vpn
+        image: dperson/openvpn-client:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        cap_add:
+            - net_admin
+        dns:
+            - 1.1.1.1
+            - 1.0.0.1
+        environment:
+            - TZ=${TZ}
+        volumes:
+            - /dev/net:/dev/net:z
+            - ./config/vpn:/vpn
+        security_opt:
+            - label:disable
+        command: '-r 10.100.100.0/24'
+        stop_grace_period: 120s
+
+    deluge:
+        container_name: deluge
+        image: ghcr.io/linuxserver/deluge:latest
+        network_mode: service:vpn
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        environment:
+            - PUID=${USER_UID} 
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./downloads:/downloads
+            - ./config/deluge:/config
+        depends_on:
+            - vpn
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:8112" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    # === Usenet downloader ===
+    nzbget:
+        container_name: nzbget
+        image: ghcr.io/linuxserver/nzbget:latest
+        restart: unless-stopped
+        labels: 
+            - com.centurylinklabs.watchtower.enable=true
+        environment: 
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes: 
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/nzbget:/config
+            - ./downloads:/downloads
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:6789" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    # === Library management ===
+    sonarr:
+        container_name: sonarr
+        image: ghcr.io/linuxserver/sonarr:develop
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/sonarr:/config
+            - ./config/mount/mount:/tv:shared
+            - ./downloads:/downloads
+        depends_on:
+            - prowlarr
+            - deluge
+            - nzbget
+            - mount
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:8989/api/v3/health?apikey=${SONARR_API_KEY}" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    radarr:
+        container_name: radarr
+        image: ghcr.io/linuxserver/radarr:nightly
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/radarr:/config
+            - ./config/mount/mount:/movies:shared
+            - ./downloads:/downloads
+        depends_on:
+            - prowlarr
+            - deluge
+            - nzbget
+            - mount
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:7878/api/v3/health?apikey=${RADARR_API_KEY}" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    readarr:
+        container_name: readarr
+        image: ghcr.io/hotio/readarr:nightly
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+            - UMASK=002
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/readarr:/config
+            - ./config/mount/mount:/mount:shared
+            - ./downloads:/downloads
+        depends_on:
+            - prowlarr
+            - deluge
+            - nzbget
+            - mount
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:8787/api/v1/health?apikey=${READARR_API_KEY}" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+#    transcoderr:
+#        container_name: transcoderr
+#        image: drkno/transcoderr:latest
+#        restart: unless-stopped
+#        labels: 
+#            - com.centurylinklabs.watchtower.enable=true
+#        environment:
+#            - TZ=${TZ}
+#            - MEDIA_DIRECTORY=/media
+#            - MEDIA_DIRECTORY_REGEX=.*media
+#        volumes:
+#            - ./config/transcoderr:/config
+#            - ./config/mount/mount:/media:shared
+
+    nzbthrottle:
+        container_name: nzbthrottle
+        image: daghaian/nzbthrottle:latest
+        restart: unless-stopped
+        labels: 
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - ./config/nzbthrottle/config.json:/nzbthrottle/config.json
+            - ./config/nzbthrottle/nzbthrottle.log:/nzbthrottle/nzbthrottle.log
+            - ./config/nzbthrottle/etc/passwd:/etc/passwd
+            - ./config/nzbthrottle/etc/group:/etc/group
+            - ./config/nzbthrottle/etc/shadow:/etc/shadow
+        user: "${USER_UID}:${USER_GID}"
+
+    # === Media servers ===
+    plex:
+        container_name: plex
+        image: ghcr.io/linuxserver/plex:latest
+        restart: unless-stopped
+        shm_size: 8gb
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - VERSION=latest
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/plex/library:/config
+            - ./config/mount/mount:/data:shared
+            - ./config/plex/transcode:/transcode
+        devices:
+            - /dev/dri:/dev/dri
+        depends_on:
+            - mount
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:32400/identity" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    jellyfin:
+        container_name: jellyfin
+        image: ghcr.io/linuxserver/jellyfin:nightly
+        shm_size: 8gb
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/jellyfin/config:/config
+            - ./config/mount/mount:/data/media
+        devices:
+            - /dev/dri:/dev/dri
+        depends_on:
+            - mount
+        healthcheck:
+            test: 'curl -f --show-error --connect-timeout 10 "http://localhost:8096" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        stop_grace_period: 120s
+
+    # === Meta services ===
+    tautulli:
+        container_name: tautulli
+        image: tautulli/tautulli:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - ./config/tautulli:/config
+        depends_on:
+            - plex
+        stop_grace_period: 120s
+
+    your2020:
+        container_name: your2020
+        image: drkno/your2020:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/your2020:/config
+        user: "${USER_UID}:${USER_GID}"
+        stop_grace_period: 120s
+
+    overseerr:
+        container_name: overseerr
+        image: sctx/overseerr:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/overseerr:/app/config
+        depends_on:
+            - sonarr
+            - radarr
+            - plex
+        healthcheck:
+            test: 'wget http://localhost:5055/api/v1/status -qO /dev/null || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+        user: "${USER_UID}:${USER_GID}"
+        stop_grace_period: 120s
+
+    # === Google drive mount ===
+    mount:
+        container_name: mount
+        image: drkno/cloudmount:latest
+        restart: unless-stopped
+        privileged: true
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        cap_add:
+            - MKNOD
+            - SYS_ADMIN
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+            - ENCRYPT_MEDIA=1
+            - BUFFER_SIZE=500M
+            - MAX_READ_AHEAD=30G
+            - CHECKERS=16
+            - "RCLONE_CLOUD_ENDPOINT=gd-crypt:"
+            - "RCLONE_LOCAL_ENDPOINT=local-crypt:"
+            - CHUNK_SIZE=10M
+            - DATE_FORMAT=+%F@%T
+            - REMOVE_LOCAL_FILES_BASED_ON=space
+            - REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB=100
+            - FREEUP_ATLEAST_GB=80
+            - REMOVE_LOCAL_FILES_AFTER_DAYS=1
+            - READ_ONLY=1
+            - PLEX_URL=plex:32400
+            - PLEX_TOKEN=${PLEX_TOKEN}
+            - CLOUDUPLOADTIME=0 1 * * *
+            - RMDELETETIME=0 6 * * *
+            - CHUNK_CHECK_THREADS=16
+            - CHUNK_LOAD_AHEAD=6
+            - CHUNK_LOAD_THREADS=16
+            - MAX_NUM_CHUNKS=50
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/mount:/config:shared
+        devices:
+            - /dev/fuse
+
+    # === Single sign on ===
+    sso:
+        container_name: sso
+        image: drkno/plexsso:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=true
+        environment:
+            - TZ=${TZ}
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/sso:/config
+        command: -s ${PLEX_SERVER_ID} -c .${HOST_NAME}
+        user: "${USER_UID}:${USER_GID}"
+        stop_grace_period: 120s
+
+    # === Load balancer, reverse-proxy & TLS termination ===
+    letsencrypt:
+        container_name: letsencrypt
+        image: ghcr.io/linuxserver/swag:latest
+        restart: unless-stopped
+        labels:
+            - com.centurylinklabs.watchtower.enable=false
+        cap_add:
+            - MKNOD
+            - SYS_ADMIN
+        environment:
+            - PUID=${USER_UID}
+            - PGID=${USER_GID}
+            - TZ=${TZ}
+            - URL=${HOST_NAME}
+            - EXTRA_DOMAINS=*.${EXTRA_HOSTS}
+            - SUBDOMAINS=wildcard
+            - VALIDATION=dns
+            - DNSPLUGIN=cloudflare
+            - EMAIL=${ADMIN_EMAIL}
+            - STAGING=false
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - ./config/letsencrypt:/config
+            - ./config/letsencrypt/jdomain:/etc/cont-init.d/05-jdomain
+        ports:
+            - 80:80/tcp
+            - 443:443/tcp
+            - 443:443/udp
+            - 32400:23400/tcp
+        healthcheck:
+            test: 'curl -k -f --show-error --connect-timeout 10 -H "Host: ${PLEX_SUBDOMAN}.${HOST_NAME}" "https://localhost/identity" || exit 1'
+            interval: 5m
+            timeout: 10s
+            retries: 3
+
+    # === Docker image auto-update ===
+    # watchtower:
+    #     container_name: watchtower
+    #     image: containrrr/watchtower
+    #     restart: unless-stopped
+    #     labels:
+    #         - com.centurylinklabs.watchtower.enable=true
+    #     volumes:
+    #         - /var/run/docker.sock:/var/run/docker.sock
+    #     command: --label-enable --schedule "0 0 4 * * *" --cleanup
